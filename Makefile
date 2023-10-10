@@ -1,6 +1,6 @@
-CC      = g++
-cc     = gcc
-CFLAGS  = -Wall -g #--coverage
+CC = gcc
+CFLAGS = -Wall -g -fPIC #--coverage
+LIBCFLAGS = -Wall -shared
 LDFLAGS = -lgsl -lgslcblas #--coverage
 
 OBJ = call_ee.o solvers.o zsolve_quartic.o Roots3And4.o
@@ -17,19 +17,21 @@ else
 	endif
 endif
 
-library: build-all
-	$(cc) -shared $(LIB) -o $(LIBNAME) $(LDFLAGS)
+library: $(LIB)
+	$(CC) $(LIB) $(LIBCFLAGS) -o $(LIBNAME) $(LDFLAGS)
 
-prog: build-all call_ee.o
+prog: $(OBJ)
 	$(CC) $(CFLAGS) -o overlap $(OBJ) $(LDFLAGS)
-
-build-all: $(LIB)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
+julia-lib: library clean
+
 .PHONY: clean
 clean:
-	rm -rf $(BIN) $(OBJ) $(LIBNAME) *.gcda *gcno
+	rm -rf $(BIN) $(OBJ) *.gcda *gcno
+clean-julia:
+	rm -rf $(LIBNAME)
 gcov:
 	gcovr -r . --html -o coverage.html --html-details
